@@ -91,5 +91,4 @@ The Smart Irrigation System using Arduino is a cost-effective, automated solutio
 
 ### Overview
 1. [Presentation](https://docs.google.com/presentation/d/1TBcVj-FMSX9GrTplZ_tyU9wid7fbfIdF/edit#slide=id.p2)
-2. [Report]([https://docs.google.com/presentation/d/1TBcVj-FMSX9GrTplZ_tyU9wid7fbfIdF/edit#slide=id.p2])
 
