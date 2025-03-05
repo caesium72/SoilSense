@@ -6,7 +6,7 @@
 #define DHT_PIN 4              // GPIO4 for DHT11
 #define RELAY_PIN 19           // GPIO19 for Relay
 #define BUZZER_PIN 21          // GPIO21 for Buzzer
-#define LED_PIN 22             //GPIO22 for led
+#define LED_PIN 22             // GPIO22 for LED
 
 // DHT11 Setup
 #define DHT_TYPE DHT11
@@ -17,30 +17,39 @@ const char* ssid = "Caesium";
 const char* password = "helloworld";
 
 // Threshold for soil moisture sensor
-int soilMoistureThreshold = 1500; // Adjust based on sensor reading
+int soilMoistureThreshold = 1500; // Adjust based on sensor calibration
 
 void setup() {
     // Start Serial Monitor
     Serial.begin(115200);
-    
-    // Start DHT sensor
-    dht.begin();
-    
-    // Start Wi-Fi
-    WiFi.begin(ssid, password);
-    while (WiFi.status() != WL_CONNECTED) {
-        delay(1000);
-        Serial.println("Connecting to WiFi...");
-    }
-    Serial.println("WiFi connected!");
-    Serial.print("IP Address: ");
-    Serial.println(WiFi.localIP());
 
-    // Initialize Relay and Buzzer
+    // Set pin modes
     pinMode(SOIL_MOISTURE_PIN, INPUT);
     pinMode(RELAY_PIN, OUTPUT);
     pinMode(BUZZER_PIN, OUTPUT);
-    pinMode(LED_PIN,OUTPUT);
+    pinMode(LED_PIN, OUTPUT);
+
+    // Start DHT sensor
+    dht.begin();
+
+    // Start Wi-Fi with a timeout
+    Serial.println("Connecting to WiFi...");
+    WiFi.begin(ssid, password);
+    
+    int timeout = 20; // 20 seconds timeout
+    while (WiFi.status() != WL_CONNECTED && timeout > 0) {
+        delay(1000);
+        Serial.print(".");
+        timeout--;
+    }
+    
+    if (WiFi.status() == WL_CONNECTED) {
+        Serial.println("\nWiFi connected!");
+        Serial.print("IP Address: ");
+        Serial.println(WiFi.localIP());
+    } else {
+        Serial.println("\nWiFi connection failed! Running offline mode.");
+    }
 }
 
 void loop() {
@@ -52,6 +61,7 @@ void loop() {
     // Read Temperature and Humidity
     float humidity = dht.readHumidity();
     float temperature = dht.readTemperature();
+    
     if (isnan(humidity) || isnan(temperature)) {
         Serial.println("Failed to read from DHT sensor!");
     } else {
@@ -62,16 +72,16 @@ void loop() {
         Serial.println(" %");
     }
 
-    // Control the Pump based on Soil Moisture
-    if (soilMoistureValue > soilMoistureThreshold) {
+    // Control the Pump, Buzzer, and LED based on Soil Moisture
+    if (soilMoistureValue > soilMoistureThreshold) {  // If soil is dry (adjust condition if needed)
         digitalWrite(RELAY_PIN, HIGH);  // Turn on the pump
-        digitalWrite(BUZZER_PIN, HIGH);  // Turn on buzzer as alert
-        digitalWrite(LED_PIN, HIGH);     // Turn on LED
+        digitalWrite(BUZZER_PIN, HIGH); // Turn on buzzer
+        digitalWrite(LED_PIN, HIGH);    // Turn on LED
         Serial.println("Soil Moisture Low! Watering...");
-    } else {
+    } else {  
         digitalWrite(RELAY_PIN, LOW);  // Turn off the pump
-        digitalWrite(BUZZER_PIN, LOW);  // Turn off buzzer
-        digitalWrite(LED_PIN, LOW);     // Turn off LED
+        digitalWrite(BUZZER_PIN, LOW); // Turn off buzzer
+        digitalWrite(LED_PIN, LOW);    // Turn off LED
         Serial.println("Soil Moisture Sufficient.");
     }
 
