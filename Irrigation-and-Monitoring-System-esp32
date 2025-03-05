@@ -1,0 +1,80 @@
+#include <WiFi.h>
+#include <DHT.h>
+
+// Pin Definitions
+#define SOIL_MOISTURE_PIN 34   // GPIO34 for Soil Moisture (Analog)
+#define DHT_PIN 4              // GPIO4 for DHT11
+#define RELAY_PIN 19           // GPIO19 for Relay
+#define BUZZER_PIN 21          // GPIO21 for Buzzer
+#define LED_PIN 22             //GPIO22 for led
+
+// DHT11 Setup
+#define DHT_TYPE DHT11
+DHT dht(DHT_PIN, DHT_TYPE);
+
+// Wi-Fi Credentials
+const char* ssid = "Caesium";
+const char* password = "helloworld";
+
+// Threshold for soil moisture sensor
+int soilMoistureThreshold = 1500; // Adjust based on sensor reading
+
+void setup() {
+    // Start Serial Monitor
+    Serial.begin(115200);
+    
+    // Start DHT sensor
+    dht.begin();
+    
+    // Start Wi-Fi
+    WiFi.begin(ssid, password);
+    while (WiFi.status() != WL_CONNECTED) {
+        delay(1000);
+        Serial.println("Connecting to WiFi...");
+    }
+    Serial.println("WiFi connected!");
+    Serial.print("IP Address: ");
+    Serial.println(WiFi.localIP());
+
+    // Initialize Relay and Buzzer
+    pinMode(SOIL_MOISTURE_PIN, INPUT);
+    pinMode(RELAY_PIN, OUTPUT);
+    pinMode(BUZZER_PIN, OUTPUT);
+    pinMode(LED_PIN,OUTPUT);
+}
+
+void loop() {
+    // Read Soil Moisture
+    int soilMoistureValue = analogRead(SOIL_MOISTURE_PIN);
+    Serial.print("Soil Moisture: ");
+    Serial.println(soilMoistureValue);
+
+    // Read Temperature and Humidity
+    float humidity = dht.readHumidity();
+    float temperature = dht.readTemperature();
+    if (isnan(humidity) || isnan(temperature)) {
+        Serial.println("Failed to read from DHT sensor!");
+    } else {
+        Serial.print("Temperature: ");
+        Serial.print(temperature);
+        Serial.print(" °C, Humidity: ");
+        Serial.print(humidity);
+        Serial.println(" %");
+    }
+
+    // Control the Pump based on Soil Moisture
+    if (soilMoistureValue > soilMoistureThreshold) {
+        digitalWrite(RELAY_PIN, HIGH);  // Turn on the pump
+        digitalWrite(BUZZER_PIN, HIGH);  // Turn on buzzer as alert
+        digitalWrite(LED_PIN, HIGH);     // Turn on LED
+        Serial.println("Soil Moisture Low! Watering...");
+    } else {
+        digitalWrite(RELAY_PIN, LOW);  // Turn off the pump
+        digitalWrite(BUZZER_PIN, LOW);  // Turn off buzzer
+        digitalWrite(LED_PIN, LOW);     // Turn off LED
+        Serial.println("Soil Moisture Sufficient.");
+    }
+
+    // Delay before reading again
+    delay(1000);
+}
